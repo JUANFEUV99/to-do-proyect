@@ -1,5 +1,5 @@
 const colors = require("colors");
-const fs = require("fs");
+const ops = require("./operaciones")
 const argv = require("yargs")
     .command("crear", "Crea una tarea", {
         descripcion: {
@@ -18,52 +18,45 @@ const argv = require("yargs")
             fault: true
         }
     })
+    .command("borrar", "Borra la tarea solicitada", {
+        descripcion: {
+            demand: true,
+            alias: "d"
+        }
+    })
     .argv;
-let tareas;
 
 let opcion = argv._[0];
 let desc = argv.descripcion;
 let val = argv.val;
-
-
 switch (opcion) {
     case "crear":
-        tareas = JSON.parse(fs.readFileSync("./tareas.json"));
-        if (tareas.find(tarea => tarea.descripcion === desc)) {
-            console.log(`La tarea ${desc} ya existe`);
+        if (ops.agregar(desc)) {
+            console.log(`La tarea ${desc} ha sido guardada exitosamente`);
         } else {
-            let tarea = {
-                descripcion: desc,
-                completada: false
-            };
-            tareas.push(tarea);
-            fs.writeFile("tareas.json", JSON.stringify(tareas), err => console.log(err));
-            console.log(`La tarea ${JSON.stringify(tarea)} ha si guardado con exito`);
+            console.log(`La tarea ${desc} no fue listada porque ya exite`);
         }
         break;
 
     case "listar":
-        tareas = require("./tareas.json");
-        console.log(tareas);
+        console.log(ops.listar());
         break;
 
     case "actualizar":
-        tareas = JSON.parse(fs.readFileSync("./tareas.json"));
-        let search = tareas.find(tarea => tarea.descripcion === desc);
-        if (search) {
-            search.completada = Boolean(val);
-            for (let index = 0; index < tareas.length; index++) {
-                if (tareas[index].descripcion === desc) {
-                    tareas[index] = search;
-                    break;
-                }
-            }
-            fs.writeFile("tareas.json", JSON.stringify(tareas), err => console.log(err));
-            console.log(`La tarea ${desc} se ha reportado completada con exito`);
+        if (ops.actualizar(desc, val)) {
+            console.log(`La tarea ${desc} fue actualizada exitosamente`);
         } else {
-            console.log(`La tarea ${desc} no exite`);
-            break;
+            console.log(`La tarea ${desc} no se encontró`)
         }
+        break;
+
+    case "borrar":
+        if (ops.borrar(desc)) {
+            console.log(`La tarea ${desc} fue borrada exitosamente`);
+        } else {
+            console.log(`La tarea ${desc} no se encontró`);
+        }
+        break;
 
     default:
         console.log("Comando no reconocido");
